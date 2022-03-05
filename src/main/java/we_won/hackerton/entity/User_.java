@@ -24,7 +24,14 @@ public class User_ extends BaseEntity{
     @Enumerated(value = EnumType.STRING)
     private UserRole role;
 
+    public User_(String email, String password, String nickname) {
+        this.username = email;
+        this.password = password;
+        this.nickname = nickname;
+    }
+
     public void encodePassword(PasswordEncoder passwordEncoder) {
+
         this.password = passwordEncoder.encode(this.password);
     }
 

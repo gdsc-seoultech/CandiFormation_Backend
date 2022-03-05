@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import we_won.hackerton.Interface.UserRepository;
 import we_won.hackerton.Interface.UserService;
+import we_won.hackerton.dto.UserFormDTO;
 import we_won.hackerton.entity.User_;
 
 import java.util.Optional;
@@ -61,6 +62,25 @@ public class UserServiceImpl implements UserService {
             return new ResponseEntity<>("해당 이메일이 이미 존재합니다.", HttpStatus.BAD_REQUEST);
         } else {
             return new ResponseEntity<>(HttpStatus.OK);
+        }
+    }
+
+    public boolean emailDuplicationCheck(String email) {
+        return userRepository.findByUsername(email).isPresent();
+    }
+
+    public boolean nicknameDuplicationCheck(String email, String password, String nickname) {
+        boolean isNicknameExist = userRepository.findByNickname(nickname).isPresent();
+        boolean isEmailExist = userRepository.findByUsername(email).isPresent();
+
+        if (isNicknameExist || isEmailExist) {
+            return false;
+        } else {
+//            DuplicationDTO dto = new DuplicationDTO(email, passwordEncoder.encode(password), nickname);
+            UserFormDTO dto = new UserFormDTO(email, passwordEncoder.encode(password), nickname);
+//            User_ user = new User_(email, passwordEncoder.encode(password), nickname);
+            userRepository.save(dto.toEntity());
+            return true;
         }
     }
 

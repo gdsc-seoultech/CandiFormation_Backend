@@ -1,6 +1,9 @@
 package we_won.hackerton.emailAuthentication;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -16,9 +19,13 @@ import java.util.Random;
 @Service
 public class EmailServiceImpl implements EmailService{
 
-  JavaMailSender emailSender;
+  @Autowired
+  private JavaMailSender emailSender;
+
+  @Autowired
   private final EmailRepository emailRepository;
-  public static String ePw = null;
+
+  public String ePw = null;
 
   @Autowired
   public EmailServiceImpl(JavaMailSender emailSender, EmailRepository emailRepository) {
@@ -26,6 +33,8 @@ public class EmailServiceImpl implements EmailService{
     this.emailRepository = emailRepository;
   }
 
+  @Autowired
+  private RedisTemplate<String, String> redisTemplate;
 
 
 
@@ -84,8 +93,7 @@ public class EmailServiceImpl implements EmailService{
 
   @Override
   public String sendSimpleMessage(String to) throws Exception {
-    //System.out.println("sendSimple 실행되냐");
-    EmailServiceImpl.ePw = createKey();
+    ePw = createKey();
 
     MimeMessage message = createMessage(to);
     try {
@@ -97,24 +105,32 @@ public class EmailServiceImpl implements EmailService{
     //DB 관련 코드
     //ePw 인증 번호 to가 이메일
     System.out.println("여기가 이메일을 보내는 곳입니다~");
-    Optional<Email> email = emailRepository.findByEmail(to);
 
-    if(email.isPresent()){
-      //있으면 코드를 초기화 시켜줘야됨
-      System.out.println("email 존재 : " + email.get().getEmail());
-      email.get().setCode(ePw);
-      emailRepository.save(email.get());
 
-    }else{
-      System.out.println("email 없음");
-      Email saveEmail = new Email(to,ePw);
-      emailRepository.save(saveEmail);
+
+    ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
+    String redisEmail = valueOperations.get(to);
+    System.out.println(redisEmail);
+    if (redisEmail != null) {
+      redisTemplate.delete(to);
     }
-
-
+    valueOperations.set(to, ePw);
+//    Optional<Email> email = emailRepository.findByEmail(to);
+//
+//    if(email.isPresent()){
+//      //있으면 코드를 초기화 시켜줘야됨
+//      System.out.println("email 존재 : " + email.get().getEmail());
+//      email.get().setCode(ePw);
+//      emailRepository.save(email.get());
+//      //valueOperations.set(to, ePw);
+//
+//    }else{
+//      System.out.println("email 없음");
+//      Email saveEmail = new Email(to,ePw);
+//      emailRepository.save(saveEmail);
+//
+//    }
     //DB 관련 코드
-
-
     return ePw;
   }
 
@@ -135,5 +151,25 @@ public class EmailServiceImpl implements EmailService{
   @Override
   public void deleteByEmail(String email) {
     emailRepository.deleteByEmail(email);
+  }
+
+  @Override
+  public boolean isMatch(String email, String code) {
+//    Optional<Email> redis = emailRepository.findByEmail(email);
+    String redisCode = redisTemplate.opsForValue().get(email);
+    if (!redisCode.isEmpty() && redisCode.equals(code)) {
+      redisTemplate.delete(email);
+      return true;
+    } else {
+      return false;
+    }
+
+
+//    if (redis.isPresent() && redis.get().getCode().equals(code)) {
+//      deleteByEmail(email);
+//      return true;
+//    } else {
+//      return false;
+//    }
   }
 }

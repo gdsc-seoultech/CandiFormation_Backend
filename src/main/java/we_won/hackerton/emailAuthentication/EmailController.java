@@ -1,10 +1,12 @@
 package we_won.hackerton.emailAuthentication;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import we_won.hackerton.Interface.EmailRepository;
 import we_won.hackerton.response.EmailResponse;
 
 @RestController
@@ -27,30 +29,31 @@ public class EmailController {
   }
 
 
+//  @PostMapping("/verifyCode/{userEmail}/{code}")
+//  public EmailResponse verifyCode(@PathVariable String code, @PathVariable(value = "userEmail") String userEmail) {
+////    boolean codeResult = false;
+////    boolean emailResult = false;
+//    EmailResponse emailResponse;
+//
+////    if (EmailServiceImpl.ePw.equals(code)) {
+////      codeResult = true;
+////    }
+////
+////    if(emailService.checkUserEmail(userEmail,code)){
+////      emailResult = true;
+////    }
+//
+//    if(emailService.isMatch(userEmail, code)){
+//      emailResponse = new EmailResponse("올바른 코드입니다.",true);
+//    }else{
+//      emailResponse = new EmailResponse("코드가 맞지 않습니다.",false);
+//    }
+//    return emailResponse;
+//  }
+
   @PostMapping("/verifyCode/{userEmail}/{code}")
-  public EmailResponse verifyCode(@PathVariable String code, @PathVariable(value = "userEmail") String userEmail) {
-    boolean codeResult = false;
-    boolean emailResult = false;
-    EmailResponse emailResponse;
-
-    if (EmailServiceImpl.ePw.equals(code)) {
-      codeResult = true;
-    }
-
-    if(emailService.checkUserEmail(userEmail,code)){
-      emailResult = true;
-    }
-
-    if(codeResult && emailResult){
-      emailResponse = new EmailResponse("회원가입에 성공했습니다.",true);
-      emailService.deleteByEmail(userEmail);
-    }else{
-      emailResponse = new EmailResponse("코드가 맞지 않습니다.",false);
-    }
-
-
-    return emailResponse;
+  public boolean verifyCode(@PathVariable String code, @PathVariable(value = "userEmail") String userEmail) {
+    return emailService.isMatch(userEmail, code);
   }
-
 
 }
