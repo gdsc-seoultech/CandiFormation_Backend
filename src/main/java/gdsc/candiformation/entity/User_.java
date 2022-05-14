@@ -1,0 +1,45 @@
+package gdsc.candiformation.entity;
+
+import lombok.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import gdsc.candiformation.constant.UserRole;
+
+import javax.persistence.*;
+
+@Table(name = "user")
+@Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class User_ extends BaseEntity{
+
+    @Column(nullable = false, unique = true)
+    private String username; //이메일
+
+    private String password;
+
+    @Column(nullable = false,unique = true)
+    private String nickname;
+
+    @Column(nullable = false)
+    @Enumerated(value = EnumType.STRING)
+    private UserRole role;
+
+    public User_(String email, String password, String nickname) {
+        this.username = email;
+        this.password = password;
+        this.nickname = nickname;
+    }
+
+    public void encodePassword(PasswordEncoder passwordEncoder) {
+
+        this.password = passwordEncoder.encode(this.password);
+    }
+
+    @Builder
+    public User_(String username, String password, UserRole role,String nickname) {
+        this.username = username;
+        this.password = password;
+        this.role = role;
+        this.nickname = nickname;
+    }
+}
